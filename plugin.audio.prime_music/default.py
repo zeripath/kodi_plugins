@@ -48,12 +48,13 @@ socket.setdefaulttimeout(30)
 pluginhandle = int(sys.argv[1])
 cj = cookielib.MozillaCookieJar()
 cacheFolder = os.path.join(addonUserDataFolder, "cache")
-#cacheFolderFanartTMDB = os.path.join(cacheFolder, "fanart")
+#cacheFolderCoversTMDB = os.path.join(cacheFolder, "fanart")
 addonFolderResources = os.path.join(addonFolder, "resources")
 defaultFanart = os.path.join(addonFolderResources, "fanart.jpg")
-siteVersion = addon.getSetting("siteVersion")
 siteVersionsList = ["com", "co.uk", "de"]
-siteVersion = siteVersionsList[int(siteVersion)]
+languages = ["en,en-US", "en-GB,en-US", "de,en-US"]
+languageVersion = languages[int(siteVersionType)]
+siteVersion = siteVersionsList[int(siteVersionType)]
 urlMainS = "https://www.amazon."+siteVersion
 urlMain = urlMainS
 quality = addon.getSetting("quality")
@@ -71,6 +72,25 @@ opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
 userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2566.0 Safari/537.36"
 opener.addheaders = [('User-agent', userAgent)]
 
+listAlbumsUrls = ['https://www.amazon.com/s/ref=dmm_pr_bbx_album?ie=UTF8&bbn=8335758011&rh=i%3Adigital-music-album',
+    'https://www.amazon.co.uk/s/ref=dmm_pr_bbx_kl_al_pal?ie=UTF8&bbn=5520010031&rh=i%3Adigital-music-album',
+    'https://www.amazon.de/s/ref=dmm_pr_bbx_album?ie=UTF8&bbn=5686557031&rh=i%3Adigital-music-album']
+
+listPlaylistsUrls = ['https://www.amazon.com/s/ref=s9_acsd_al_bw_srch?rh=n%3A8335758011%2Cn%3A8335758011%2Cp_n_feature_browse-bin%3A7755788011&bbn=8335758011&rw_html_to_wsrp=1&pf_rd_m=ATVPDKIKX0DER&pf_rd_s=merchandised-search-10&pf_rd_r=CDDK9XXDR2PHQJSV6S8H&pf_rd_t=101&pf_rd_p=137bb9ea-9c2e-46f1-8fb1-485b36683f02&pf_rd_i=10232860011',
+    "https://www.amazon.co.uk/s/ref=lp_5788502031_nr_p_n_format_browse-bi_0?fst=as%3Aoff&rh=n%3A77197031%2Cn%3A%21425601031%2Cn%3A%21425603031%2Cn%3A5788502031%2Cp_n_format_browse-bin%3A5685284031&bbn=5788502031&ie=UTF8",
+    "https://www.amazon.de/s/ref=s9_rbpl_bw_srch?__mk_de_DE=%C5M%C5Z%D5%D1&rh=i%3Adigital-music-playlist%2Cn%3A5686557031%2Cp_n_format_browse-bin%3A5686558031&sort=featured-rank"]
+
+newAlbumsUrls = ['https://www.amazon.com/s/ref=sr_nr_p_n_date_first_avail_2?rh=n%3A8335758011%2Cp_n_feature_browse-bin%3A625150011%2Cp_n_date_first_available_prime%3A8456645011&bbn=8335758011&ie=UTF8',
+    "https://www.amazon.co.uk/s/ref=sr_nr_p_n_date_first_avail_2?rh=n%3A5520010031%2Cp_n_format_browse-bin%3A78186031%2Cp_n_date_first_available_prime%3A5685315031&bbn=5520010031&ie=UTF8",
+    "https://www.amazon.de/s/ref=s9_aas_bw_srch?__mk_de_DE=%C5M%C5Z%D5%D1&rh=i%3Adigital-music-album%2Cn%3A5686557031%2Cp_n_format_browse-bin%3A180848031%2Cp_n_date_first_available_prime%3A6969880031&bbn=5686557031&sort=featured-rank&rw_html_to_wsrp=1&pf_rd_m=A3JWKAKR8XB7XF&pf_rd_s=merchandised-search-5&pf_rd_r=6RVAXVCW0CXA3QF4F86R&pf_rd_t=101&pf_rd_p=805206707&pf_rd_i=7457104031"]
+
+listSongsUrls = ["https://www.amazon.com/s/ref=dmm_pr_bbx_sg?ie=UTF8&bbn=8335758011&rh=n%3A8335758011%2Cp_n_feature_browse-bin%3A625151011",
+    "https://www.amazon.co.uk/s/ref=dmm_pr_bbx_kl_al_pso?ie=UTF8&bbn=5520010031&rh=i%3Adigital-music-track%2Cn%3A5520010031%2Cp_n_format_browse-bin%3A78187031",
+    "https://www.amazon.de/s/ref=sr_nr_p_n_format_browse-bi_2?fst=as%3Aoff&rh=n%3A5686557031%2Ck%2Cp_n_format_browse-bin%3A180849031&bbn=5686557031&ie=UTF8"]
+
+musicUrls = ['https://music.amazon.com/',
+    'https://music.amazon.co.uk/',
+    'https://music.amazon.de/']
 
 if addon.getSetting('ssl_verif') == 'true' and hasattr(ssl, '_create_unverified_context'):
     ssl._create_default_https_context = ssl._create_unverified_context
@@ -79,10 +99,10 @@ if addon.getSetting('ssl_verif') == 'true' and hasattr(ssl, '_create_unverified_
 def index():
     loginResult = login()
     if loginResult=="prime":
-        addDir(translation(30002), urlMain+"/s/ref=dmm_pr_bbx_album?ie=UTF8&bbn=5686557031&rh=i%3Adigital-music-album", 'listAlbums', "")
-        addDir(translation(30003), urlMain+"/s/ref=s9_rbpl_bw_srch?__mk_de_DE=%C5M%C5Z%D5%D1&rh=i%3Adigital-music-playlist%2Cn%3A5686557031%2Cp_n_format_browse-bin%3A5686558031&sort=featured-rank", 'listAlbums', "")
+        addDir(translation(30002), listAlbumsUrls[siteVersionType], 'listAlbums', "")
+        addDir(translation(30003), listPlaylistsUrls[siteVersionType], 'listAlbums', "")
         addDir(translation(30004), "", 'listGenres', "")
-        addDir(translation(30005), urlMain+"/s/ref=s9_aas_bw_srch?__mk_de_DE=%C5M%C5Z%D5%D1&rh=i%3Adigital-music-album%2Cn%3A5686557031%2Cp_n_format_browse-bin%3A180848031%2Cp_n_date_first_available_prime%3A6969880031&bbn=5686557031&sort=featured-rank&rw_html_to_wsrp=1&pf_rd_m=A3JWKAKR8XB7XF&pf_rd_s=merchandised-search-5&pf_rd_r=6RVAXVCW0CXA3QF4F86R&pf_rd_t=101&pf_rd_p=805206707&pf_rd_i=7457104031", 'listAlbums', "")
+        addDir(translation(30005), newAlbumsUrls[siteVersionType], 'listAlbums', "")
         addDir(translation(30016), "albums", 'search', "")
         addDir(translation(30017), "songs", 'search', "")
         addDir(translation(30010), "playlists", 'listOwnPlaylists', "")
@@ -129,7 +149,11 @@ def listAlbums(url):
                 continue
             title = cleanInput(title)
             artist = ""
-            match1 = re.compile('von </span><span class="a-size-small a-color-secondary"><.+?>(.+?)<', re.DOTALL).findall(entry)
+            match1 = re.compile(['of </span><span class="a-size-small a-color-secondary"><.+?>(.+?)<',
+                'of </span><span class="a-size-small a-color-secondary"><.+?>(.+?)<',
+                'von </span><span class="a-size-small a-color-secondary"><.+?>(.+?)<'][siteVersionType], re.DOTALL).findall(entry)
+
+            #match1 = re.compile('von </span><span class="a-size-small a-color-secondary"><.+?>(.+?)<', re.DOTALL).findall(entry)
             if match1:
                 artist = match1[0]
                 artist += ": "
@@ -340,7 +364,7 @@ def setPlayItemInfo(play_item):
 
 
 def playTrack(asin):
-    content = trackPostUnicodeGetHLSPage('https://music.amazon.de/dmls/', asin)
+    content = trackPostUnicodeGetHLSPage(musicUrls[siteVersionType] + 'dmls/', asin)
     temp_file_path = addonUserDataFolder
     if forceDVDPlayer:
         temp_file_path += "/temp.mp4"
@@ -360,7 +384,7 @@ def playTrack(asin):
     xbmcplugin.setResolvedUrl(pluginhandle, True, listitem=play_item)
 
 def playMP3Track(songId):
-    content = trackPostUnicodeGetRestrictedPage('https://music.amazon.de/dmls/', songId)
+    content = trackPostUnicodeGetRestrictedPage(musicUrls[siteVersionType] + 'dmls/', songId)
     url_list_match = re.compile('urlList":\["(.+?)"',re.DOTALL).findall(content)
     if url_list_match:
         mp3_file_string = url_list_match[0]
@@ -418,7 +442,7 @@ def getUnicodePage(url):
 
 
 def showPlaylistContent():
-    content = playlistPostUnicodePage('https://music.amazon.de/cirrus/', url)
+    content = playlistPostUnicodePage(musicUrls[siteVersionType] + 'cirrus/', url)
     debug(content)
     obj = json.loads(content)
     videoimage = ScrapeUtils.VideoImage()
@@ -462,7 +486,7 @@ def showPlaylistContent():
 
 def listOwnPlaylists():
     xbmcplugin.setContent(pluginhandle, "albums")
-    content = playlistPostUnicodePage('https://music.amazon.de/cirrus/')
+    content = playlistPostUnicodePage(musicUrls[siteVersionType] + 'cirrus/')
     spl = content.split("adriveId")
     for i in range(1, len(spl), 1):
         entry = spl[i]
@@ -478,7 +502,7 @@ def listOwnPlaylists():
 
 def listOwnAlbums():
     xbmcplugin.setContent(pluginhandle, "albums")
-    content = albumPostUnicodePage('https://music.amazon.de/cirrus/', url)
+    content = albumPostUnicodePage(musicUrls[siteVersionType] + 'cirrus/', url)
     spl = content.split("albumArtLocator")
     videoimage = ScrapeUtils.VideoImage()
     for i in range(1, len(spl), 1):
@@ -512,7 +536,7 @@ def listOwnAlbums():
 
 def listOwnArtists():
     xbmcplugin.setContent(pluginhandle, "artists")
-    content = albumPostUnicodePage('https://music.amazon.de/cirrus/', url, True)
+    content = albumPostUnicodePage(musicUrls[siteVersionType] + 'cirrus/', url, True)
     spl = content.split("albumArtLocator")
     videoimage = ScrapeUtils.VideoImage()
     for i in range(1, len(spl), 1):
@@ -551,14 +575,14 @@ def showListFollowed():
              'Accept-Encoding' : 'gzip,deflate,br',
              'Accept-Language' : 'de,en-US;q=0.7,en;q=0.3',
              'Content-Encoding' : 'amz-1.0',
-             'Referer' : 'https://music.amazon.de/home',
+             'Referer' : musicUrls[siteVersionType] + 'home',
              'Accept' : '*/*',
              'content-type' : 'application/json',
              'csrf-token' : addon.getSetting('csrf_Token'),
              'csrf-rnd' : addon.getSetting('csrf_rndToken'),
              'csrf-ts' : addon.getSetting('csrf_tsToken') }
 
-    url = 'https://music.amazon.de/EU/api/playlists/'
+    url = musicUrls[siteVersionType] + 'EU/api/playlists/'
 
     data ='{'
     data = data + '\"pageSize\":20,'
@@ -593,14 +617,14 @@ def showLookupList(asin):
              'Accept-Encoding' : 'gzip,deflate,br',
              'Accept-Language' : 'de,en-US;q=0.7,en;q=0.3',
              'Content-Encoding' : 'amz-1.0',
-             'Referer' : 'https://music.amazon.de/playlists/' + asin,
+             'Referer' : musicUrls[siteVersionType] + 'playlists/' + asin,
              'Accept' : '*/*',
              'content-type' : 'application/json',
              'csrf-token' : addon.getSetting('csrf_Token'),
              'csrf-rnd' : addon.getSetting('csrf_rndToken'),
              'csrf-ts' : addon.getSetting('csrf_tsToken') }
 
-    url = 'https://music.amazon.de/EU/api/muse/legacy/lookup'
+    url = musicUrls[siteVersionType] + 'EU/api/muse/legacy/lookup'
 
     data ='{'
     data = data + '\"asins\":[\"' + asin + '\"],'
@@ -647,14 +671,14 @@ def showListRecentlyPlayed():
              'Accept-Encoding' : 'gzip,deflate,br',
              'Accept-Language' : 'de,en-US;q=0.7,en;q=0.3',
              'Content-Encoding' : 'amz-1.0',
-             'Referer' : 'https://music.amazon.de/recently/played',
+             'Referer' : musicUrls[siteVersionType] + 'recently/played',
              'Accept' : '*/*',
              'content-type' : 'application/json',
              'csrf-token' : addon.getSetting('csrf_Token'),
              'csrf-rnd' : addon.getSetting('csrf_rndToken'),
              'csrf-ts' : addon.getSetting('csrf_tsToken') }
 
-    url = 'https://music.amazon.de/EU/api/nimbly/'
+    url = musicUrls[siteVersionType] + 'EU/api/nimbly/'
 
     data ='{'
     data = data + '\"activityTypeFilters\":[\"PLAYED\"],'
@@ -759,7 +783,7 @@ def albumPostUnicodePage(url, nextSite = "", searchArtist = False):
 def showAlbumContent(ArtistName, AlbumName):
     artist = ArtistName
     title = AlbumName
-    content = albumTracksPostUnicodePage('https://music.amazon.de/cirrus/', artist, title) 
+    content = albumTracksPostUnicodePage(musicUrls[siteVersionType] + 'cirrus/', artist, title) 
     videoimage = ScrapeUtils.VideoImage()
     listIcon=re.compile('"albumCoverImageFull":"(.+?)"').search(content).group(1)
     albumAsin=re.compile('"albumAsin":"(.+?)"').search(content).group(1)
@@ -842,7 +866,7 @@ def albumTracksPostUnicodePage(url, artist, title):
 
 def showArtistContent(ArtistName ):
     artist = ArtistName
-    content = artistTracksPostUnicodePage('https://music.amazon.de/cirrus/', artist )
+    content = artistTracksPostUnicodePage(musicUrls[siteVersionType] + 'cirrus/', artist )
     videoimage = ScrapeUtils.VideoImage()
 
     obj = json.loads(content)
@@ -993,7 +1017,9 @@ def trackPostUnicodeGetHLSPage(url, asin, isRetry = False):
                 'csrf-rnd': addon.getSetting('csrf_rndToken'),
                 'csrf-ts': addon.getSetting('csrf_tsToken')
                 }
+
     data = '{"customerId":"' + addon.getSetting('customerID') + '","deviceToken":{"deviceTypeId":"A16ZV8BU3SN1N3","deviceId":"' + addon.getSetting('req_dev_id') + '"},"appMetadata":{"https":"true"},"clientMetadata":{"clientId":"WebCP"},"contentId":{"identifier":"' + asin + '","identifierType":"ASIN"},"bitRateList":["' + audioQuality + '"],"hlsVersion":"V3"}'
+
     coded_req = urllib2.Request(url, data, headers)
     content = ""
     try:
@@ -1048,18 +1074,19 @@ def getAsciiPage(url):
         content = unicode(content, "utf-8")
     return content.encode("utf-8")
 
-def search(type):
-    keyboard = xbmc.Keyboard('', translation(30015))
-    keyboard.doModal()
-    if keyboard.isConfirmed() and keyboard.getText():
-        search_string = unicode(keyboard.getText(), "utf-8").replace(" ", "+")
-        search_string = urllib.quote_plus(search_string.encode("utf8"))
-        if siteVersion=="de":
-            if type=="albums":
-                listAlbums(urlMain+"/s?rh=n%3A5686557031%2Ck%2Cp_n_format_browse-bin%3A180848031&keywords="+search_string+"&ie=UTF8")
-            elif type=="songs":
-                listSearchedSongs(urlMain+"/s/ref=sr_nr_p_n_format_browse-bi_2?fst=as%3Aoff&rh=n%3A5686557031%2Ck%2Cp_n_format_browse-bin%3A180849031&bbn=5686557031&keywords="+search_string+"&ie=UTF8")
-#        elif siteVersion=="com":
+def doSearch(type, search_string):
+    settingName = 'previous-' + type + '-search-'
+    for i in range(10, 0, -1):
+        addon.setSetting(settingName + str(i + 1), addon.getSetting(settingName + str(i)))
+    log("Setting " + settingName + "0 to: " + search_string)
+    addon.setSetting(settingName + "0", search_string)
+    search_string = search_string.replace(" ", "+")
+    search_string = urllib.quote_plus(search_string.encode("utf8"))
+    if type=="albums":
+        listAlbums(listAlbumsUrls[siteVersionType] + '&keywords=' + search_string)
+    elif type=="songs":
+        listSearchedSongs(listSongsUrls[siteVersionType] + '&keywords=' + search_string)
+#       elif siteVersion=="com":
 #            if type=="movies":
 #                listMovies(urlMain+"/mn/search/ajax/?_encoding=UTF8&url=node%3D7613704011&field-keywords="+search_string)
 #            elif type=="tv":
@@ -1069,6 +1096,11 @@ def search(type):
 #                listMovies(urlMain+"/mn/search/ajax/?_encoding=UTF8&url=node%3D3356010031&field-keywords="+search_string)
 #            elif type=="tv":
 #                listShows(urlMain+"/mn/search/ajax/?_encoding=UTF8&url=node%3D3356011031&field-keywords="+search_string)
+def search(type):
+    keyboard = xbmc.Keyboard('', translation(30015))
+    keyboard.doModal()
+    if keyboard.isConfirmed() and keyboard.getText():
+        doSearch(type, unicode(keyboard.getText(), "utf-8"))
 
 
 def getmac():
@@ -1167,13 +1199,13 @@ def login(content = None, statusOnly = False):
         br["email"] = email
         br["password"] = password
         br.addheaders = [('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'),
-                 ('Accept-Encoding', 'gzip, deflate'),
-                 ('Accept-Language', 'de,en-US;q=0.8,en;q=0.6'),
-                 ('Cache-Control', 'max-age=0'),
-                 ('Connection', 'keep-alive'),
-                 ('Content-Type', 'application/x-www-form-urlencoded'),
-                 ('User-Agent', userAgent),
-                 ('Upgrade-Insecure-Requests', '1')]
+                    ('Accept-Encoding', 'gzip, deflate'),
+                    ('Accept-Language', languageVersion + ';q=0.8,en;q=0.6'),
+                    ('Cache-Control', 'max-age=0'),
+                    ('Connection', 'keep-alive'),
+                    ('Content-Type', 'application/x-www-form-urlencoded'),
+                    ('User-Agent', userAgent),
+                    ('Upgrade-Insecure-Requests', '1')]
         br.submit()
         resp = br.response().read()
         content = unicode(resp, "utf-8")
@@ -1204,25 +1236,28 @@ def login(content = None, statusOnly = False):
         match = re.compile('"csrf_ts":"(.+?)"', re.DOTALL).findall(content)
         if match:
             addon.setSetting('csrf_tsToken', match[0])
-            log(match[0])
+            log('csrf_tsToken: ' + match[0])
         match = re.compile('"csrf_rnd":"(.+?)"', re.DOTALL).findall(content)
         if match:
             addon.setSetting('csrf_rndToken', match[0])
-            log(match[0])
+            log('csrf_rnd: ' + match[0])
         match = re.compile('"csrf_token":"(.+?)"', re.DOTALL).findall(content)
         if match:
             addon.setSetting('csrf_Token', match[0])
-            log(match[0])
+            log('csrf_Token: ' + match[0])
         cj.save(cookieFile, ignore_discard=True, ignore_expires=True)
         for cookie in cj:
-            if cookie.name == "ubid-acbde":
+            if ((siteVersion == "de" and cookie.name == "ubid-acbde")
+                    or (siteVersion == "co.uk" and cookie.name == "ubid-acbuk")
+                    or (siteVersion == "com" and cookie.name.startswith("ubid-acb"))):
                 dev_id = cookie.value.replace("-", "")
                 addon.setSetting('req_dev_id', dev_id)
+                log('req_dev_id: ' + dev_id)
         content = getUnicodePage(urlMainS)
         customer_match = re.compile('"customerID":"(.+?)"', re.DOTALL).findall(content)
         if customer_match:
             addon.setSetting('customerID', customer_match[0])
-            log(customer_match[0])
+            log('customerId: ' + customer_match[0])
         signoutmatch = re.compile("declare\('config.signOutText',(.+?)\);", re.DOTALL).findall(content)
         if is_prime_expression in content: #
             return "prime"
