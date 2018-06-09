@@ -407,13 +407,14 @@ def deleteCache():
 
 def getUnicodePage(url):
     print url
-    req = opener.open(url)
+    headers = {'User-agent': userAgent}
+    req = requests.get(url, headers=headers)
     content = ""
     if "content-type" in req.headers and "charset=" in req.headers['content-type']:
         encoding=req.headers['content-type'].split('charset=')[-1]
-        content = unicode(req.read(), encoding)
+        content = unicode(req.content, encoding)
     else:
-        content = unicode(req.read(), "utf-8")
+        content = unicode(req.content, "utf-8")
     return content
 
 
@@ -1162,7 +1163,7 @@ def login(content = None, statusOnly = False):
         br.set_handle_gzip(True)
         br.set_handle_robots(False)
         br.addheaders = [('User-Agent', userAgent)]
-        content = br.open(urlMainS+"/gp/dmusic/marketing/CloudPlayerLaunchPage/ref=dm_dp_mcn_cp")
+        content = br.open(urlMainS+"/gp/dmusic/cloudplayer/forceSignIn?ref_=dm_dp_mcn_cp")
         br.select_form(name="signIn")
         br["email"] = email
         br["password"] = password
@@ -1177,6 +1178,26 @@ def login(content = None, statusOnly = False):
         br.submit()
         resp = br.response().read()
         content = unicode(resp, "utf-8")
+        content = content.replace("\\", "")
+        while 'image-captcha-section' in content:
+            log("Captcha required!")
+            soup = parseHTML(content)
+            image_tags = soup.findAll('img')
+            url = image_tags[2]['src']
+            br.select_form(name="signIn")
+            br["password"] = password
+            r = requests.get(url, allow_redirects=True)
+            msgtxt = r.content().p.renderContents().strip()
+            kb = xbmc.Keyboard('', msgtxt)
+            kb.doModal()
+            if kb.isConfirmed() and kb.getText():
+                xbmc.executebuiltin('ActivateWindow(busydialog)')
+                guess = kb.getText()
+            br["guess"] = guess
+            br.submit()
+            resp = br.response().read()
+            content = unicode(resp, "utf-8")
+            xbmc.executebuiltin('Dialog.Close(busydialog)')
         while 'auth-mfa-form' in content :
             soup = parseHTML(content)
             log('MFA form')
@@ -1196,11 +1217,6 @@ def login(content = None, statusOnly = False):
             content = unicode(resp, "utf-8")
             soup = parseHTML(content)
             xbmc.executebuiltin('Dialog.Close(busydialog)')
-        content = content.replace("\\","")
-        captcha_match = re.compile('ap_captcha_title', re.DOTALL).findall(content)
-        if captcha_match:
-            log("Captcha required!")
-            return "captcha_req"
         match = re.compile('"csrf_ts":"(.+?)"', re.DOTALL).findall(content)
         if match:
             addon.setSetting('csrf_tsToken', match[0])
