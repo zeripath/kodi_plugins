@@ -11,6 +11,7 @@ import sys
 import re
 import os
 import json
+import lxml.html
 import time
 import string
 import random
@@ -370,28 +371,16 @@ def playMP3Track(songId):
 
 
 def listGenres():
-    addDir(translation(30020), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180643031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30021), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180530031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30022), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180548031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30023), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180599031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30024), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180607031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30025), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180620031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30026), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180621031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30027), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180627031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30028), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180635031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30029), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180654031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30030), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180542031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30031), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180557031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30032), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180671031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30033), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180679031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30034), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180680031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30035), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180690031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30036), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180723031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30037), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180696031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30038), urlMain+"/s?rh=n%3A5686557031%2Cn%3A213656031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30039), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180708031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
-    addDir(translation(30040), urlMain+"/s?rh=n%3A5686557031%2Cn%3A180712031%2Cp_n_format_browse-bin%3A180848031&bbn=5686557031&sort=featured-rank&ie=UTF8", 'listAlbums', "")
+    addDir(translation(30046), "", 'index', "")
+
+    content = getUnicodePage(urlMain+"/s/ref=dmm_pr_bbx_album?ie=UTF8&bbn=5686557031&rh=i%3Adigital-music-album")
+    root = lxml.html.fromstring(content)
+    genres = root.xpath('//div[@class="categoryRefinementsSection"]//a')
+    genres = root.xpath('//div[@class="categoryRefinementsSection"]//a')
+    for link in genres:
+        addDir(link.getchildren()[0].text, urlMain + link.attrib['href'].replace("&amp;", "&"), 'listAlbums', "")
     xbmcplugin.endOfDirectory(pluginhandle)
+    xbmc.sleep(100)
 
 def deleteCookies():
     if os.path.exists(cookieFile):
